@@ -8,9 +8,11 @@ import (
 	"os"
 	"strings"
 	"zsh-alias/pkg/helpers"
+
+	"github.com/fatih/color"
 )
 
-func AddAlias(scanner *bufio.Scanner) {
+func Add(scanner *bufio.Scanner) {
 	f := helpers.GetUserInput(scanner, "Enter shell config file name: ")
 	a := helpers.GetUserInput(scanner, "Enter alias name: ")
 	c := helpers.GetUserInput(scanner, "Enter command: ")
@@ -48,13 +50,19 @@ func AddAlias(scanner *bufio.Scanner) {
 	}
 }
 
-func RemoveAlias(scanner *bufio.Scanner) {
-	f := helpers.GetUserInput(scanner, "Enter shell config file name: ")
+func Remove(scanner *bufio.Scanner, fileName string) {
 	a := helpers.GetUserInput(scanner, "Enter alias name: ")
 
+	// stop removal of all aliases if no user entry
+	if len(a) == 0 {
+		color.Yellow("Nothing Deleted")
+		os.Exit(1)
+	}
+
 	// set default
-	if len(f) == 0 {
-		f = ".zprofile"
+	if len(fileName) == 0 {
+		fileName = ".zprofile"
+
 	}
 
 	user, err := os.UserHomeDir()
@@ -63,12 +71,12 @@ func RemoveAlias(scanner *bufio.Scanner) {
 		log.Fatal(err)
 	}
 
-	path := user + "/" + f
+	path := user + "/" + fileName
 	lines := helpers.GetLinesFromFile(path)
 
 	for i, line := range lines {
 		if strings.HasPrefix(line, fmt.Sprintf("alias %s", a)) {
-			fmt.Println("Successfully removed alias!")
+			color.Red("Removed %s", line)
 			lines[i] = ""
 		}
 	}
@@ -80,4 +88,31 @@ func RemoveAlias(scanner *bufio.Scanner) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func List(fileName string) {
+	fmt.Println("Remove an alias by name:")
+
+	user, err := os.UserHomeDir()
+
+	if len(fileName) == 0 {
+		fileName = ".zprofile"
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	path := user + "/" + fileName
+	lines := helpers.GetLinesFromFile(path)
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, fmt.Sprintf("alias")) {
+			color.Green(line)
+		}
+	}
+}
+
+func TestFunc(x, y int) int {
+	return x + y
 }
